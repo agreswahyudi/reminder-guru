@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reminder Guru</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <header class="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8 shadow-lg">
+    <div class="max-w-6xl mx-auto px-6">
+      <h1 class="text-4xl font-bold tracking-wide">REMINDER GURU</h1>
+      <p class="mt-2 text-blue-100">Dashboard pengingat kegiatan sekolah</p>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    <div id="reminderContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Data akan muncul di sini -->
+    </div>
+  </main>
+
+  <script>
+    // GANTI LINK INI DENGAN LINK GOOGLE SHEET CSV ANDA
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShuVwT1oMEKvKLvOKUaWe0wA3HkqhLkQjCjJlbWUf0bl9693Ll3LK9fvZyiNNGbqzUIbBvIJ5hZdd1/pub?output=csv";
+
+    async function loadReminders() {
+      const container = document.getElementById("reminderContainer");
+      container.innerHTML = "<p class='text-gray-600'>Memuat data...</p>";
+
+      try {
+        const response = await fetch(sheetURL);
+        const text = await response.text();
+
+        const rows = text.trim().split("\n").slice(1);
+        const grouped = {};
+
+        rows.forEach(row => {
+          const cols = row.split(",");
+          const bulan = cols[0]?.trim();
+          const reminder = cols[2]?.trim();
+
+          if (!bulan || !reminder) return;
+
+          if (!grouped[bulan]) {
+            grouped[bulan] = [];
+          }
+
+          grouped[bulan].push(reminder);
+        });
+
+        container.innerHTML = "";
+
+        Object.keys(grouped).forEach(bulan => {
+          const card = document.createElement("div");
+          card.className = "bg-white rounded-2xl shadow-md border border-blue-100 p-6 hover:shadow-xl transition";
+
+          const title = document.createElement("h2");
+          title.className = "text-2xl font-bold text-blue-900 mb-4";
+          title.textContent = bulan.toUpperCase();
+
+          const list = document.createElement("ol");
+          list.className = "list-decimal list-inside space-y-2 text-gray-700";
+
+          grouped[bulan].forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            list.appendChild(li);
+          });
+
+          card.appendChild(title);
+          card.appendChild(list);
+          container.appendChild(card);
+        });
+      } catch (error) {
+        container.innerHTML = "<p class='text-red-600'>Gagal memuat data. Periksa link Google Sheet Anda.</p>";
+        console.error(error);
+      }
+    }
+
+    loadReminders();
+  </script>
+</body>
+</html>
