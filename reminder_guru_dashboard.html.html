@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen">
+
   <header class="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8 shadow-lg">
     <div class="max-w-6xl mx-auto px-6">
       <h1 class="text-4xl font-bold tracking-wide">REMINDER GURU</h1>
@@ -16,29 +17,27 @@
 
   <main class="max-w-6xl mx-auto px-6 py-10">
     <div id="reminderContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Data akan muncul di sini -->
+      <!-- Data reminder muncul di sini -->
     </div>
   </main>
 
   <script>
-    // GANTI LINK INI DENGAN LINK GOOGLE SHEET CSV ANDA
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShuVwT1oMEKvKLvOKUaWe0wA3HkqhLkQjCjJlbWUf0bl9693Ll3LK9fvZyiNNGbqzUIbBvIJ5hZdd1/pub?output=csv";
+    const API_URL = "https://opensheet.elk.sh/1LWHkjnO6BZ-QC9CjxEStDiqklgQ_ZYSFoVgLtokf3PM/ReminderGuru";
 
     async function loadReminders() {
       const container = document.getElementById("reminderContainer");
-      container.innerHTML = "<p class='text-gray-600'>Memuat data...</p>";
+      container.innerHTML = "<p class='text-gray-600'>Memuat data reminder...</p>";
 
       try {
-        const response = await fetch(sheetURL);
-        const text = await response.text();
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error("Gagal mengambil data");
 
-        const rows = text.trim().split("\n").slice(1);
+        const data = await response.json();
         const grouped = {};
 
-        rows.forEach(row => {
-          const cols = row.split(",");
-          const bulan = cols[0]?.trim();
-          const reminder = cols[2]?.trim();
+        data.forEach(item => {
+          const bulan = item.Bulan?.trim();
+          const reminder = item.Reminder?.trim();
 
           if (!bulan || !reminder) return;
 
@@ -62,9 +61,9 @@
           const list = document.createElement("ol");
           list.className = "list-decimal list-inside space-y-2 text-gray-700";
 
-          grouped[bulan].forEach(item => {
+          grouped[bulan].forEach(text => {
             const li = document.createElement("li");
-            li.textContent = item;
+            li.textContent = text;
             list.appendChild(li);
           });
 
@@ -72,13 +71,15 @@
           card.appendChild(list);
           container.appendChild(card);
         });
+
       } catch (error) {
-        container.innerHTML = "<p class='text-red-600'>Gagal memuat data. Periksa link Google Sheet Anda.</p>";
         console.error(error);
+        container.innerHTML = "<p class='text-red-600'>Gagal memuat data. Periksa kembali Google Sheet Anda.</p>";
       }
     }
 
     loadReminders();
   </script>
+
 </body>
 </html>
